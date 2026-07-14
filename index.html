@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="it" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>love-prank</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-1: #fff0f6;
+      --bg-2: #ffd9e8;
+      --surface: rgba(255,255,255,0.58);
+      --surface-strong: rgba(255,255,255,0.82);
+      --text: #7a0f3a;
+      --muted: #b03a6e;
+      --primary: #ff4d8d;
+      --primary-dark: #db2e72;
+      --accent: #ff8bb2;
+      --danger: #ff6ba6;
+      --shadow: 0 18px 45px rgba(255, 77, 141, 0.22);
+      --radius-xl: 28px;
+      --radius-full: 999px;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      font-family: 'Nunito', sans-serif;
+      color: var(--text);
+      overflow: hidden;
+      background:
+        radial-gradient(circle at top left, rgba(255,255,255,0.95), transparent 30%),
+        radial-gradient(circle at bottom right, rgba(255,255,255,0.5), transparent 28%),
+        linear-gradient(135deg, var(--bg-1), var(--bg-2));
+    }
+
+    .screen {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      opacity: 0;
+      pointer-events: none;
+      transform: scale(1.04);
+      transition: opacity .45s ease, transform .45s ease;
+    }
+
+    .screen.active {
+      opacity: 1;
+      pointer-events: auto;
+      transform: scale(1);
+    }
+
+    .card {
+      position: relative;
+      z-index: 3;
+      width: min(92vw, 760px);
+      min-height: 360px;
+      padding: 34px 26px;
+      border-radius: var(--radius-xl);
+      background: var(--surface);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: 1px solid rgba(255,255,255,0.7);
+      box-shadow: var(--shadow);
+      text-align: center;
+      overflow: hidden;
+    }
+
+    .card::before,
+    .card::after {
+      content: "";
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.32);
+      filter: blur(8px);
+      z-index: -1;
+    }
+
+    .card::before { width: 180px; height: 180px; top: -60px; left: -40px; }
+    .card::after { width: 140px; height: 140px; bottom: -40px; right: -20px; }
+
+    .eyebrow {
+      margin: 0 0 10px;
+      font-weight: 800;
+      font-size: 15px;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    h1 {
+      margin: 0;
+      font-family: 'Baloo 2', cursive;
+      font-size: clamp(34px, 7vw, 66px);
+      line-height: 0.95;
+    }
+
+    .subtitle {
+      width: min(100%, 520px);
+      margin: 16px auto 0;
+      font-size: clamp(17px, 2.8vw, 24px);
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .play-area {
+      position: relative;
+      height: 260px;
+      margin-top: 28px;
+      border-radius: 24px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.45), rgba(255,255,255,0.2));
+      border: 1px dashed rgba(255, 77, 141, 0.26);
+      overflow: hidden;
+    }
+
+    .btn {
+      position: absolute;
+      min-width: 132px;
+      padding: 14px 22px;
+      border: 0;
+      border-radius: var(--radius-full);
+      font-size: 20px;
+      font-weight: 800;
+      font-family: 'Baloo 2', cursive;
+      cursor: pointer;
+      transition: transform .18s ease, box-shadow .18s ease, background .18s ease;
+      box-shadow: 0 10px 24px rgba(255, 77, 141, 0.24);
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .btn:hover { transform: translateY(-2px) scale(1.02); }
+    .btn:active { transform: translateY(1px) scale(.99); }
+
+    #yesBtn {
+      left: 17%;
+      top: 53%;
+      background: linear-gradient(135deg, #ffb0ca, #ff6ba6);
+      color: white;
+    }
+
+    #noBtn {
+      left: 58%;
+      top: 53%;
+      background: linear-gradient(135deg, #ff4d8d, #db2e72);
+      color: white;
+    }
+
+    .hint {
+      position: absolute;
+      left: 50%;
+      bottom: 16px;
+      transform: translateX(-50%);
+      font-size: 14px;
+      color: var(--muted);
+      opacity: .82;
+      white-space: nowrap;
+    }
+
+    .big-message {
+      font-family: 'Baloo 2', cursive;
+      font-size: clamp(54px, 14vw, 128px);
+      line-height: .9;
+      margin: 8px 0 0;
+      color: #b0004f;
+      text-shadow: 0 8px 30px rgba(176, 0, 79, 0.2);
+    }
+
+    .small-love {
+      margin-top: 14px;
+      font-size: clamp(18px, 3vw, 28px);
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .heart-layer, .mini-hearts {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      pointer-events: none;
+    }
+
+    .floating-heart {
+      position: absolute;
+      bottom: -40px;
+      width: 24px;
+      height: 24px;
+      background: rgba(255, 77, 141, 0.22);
+      transform: rotate(45deg);
+      animation: rise linear infinite;
+      filter: drop-shadow(0 6px 14px rgba(255, 77, 141, 0.18));
+    }
+
+    .floating-heart::before,
+    .floating-heart::after {
+      content: "";
+      position: absolute;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: inherit;
+    }
+
+    .floating-heart::before { left: -12px; top: 0; }
+    .floating-heart::after { left: 0; top: -12px; }
+
+    .mini {
+      position: absolute;
+      font-size: 18px;
+      animation: twinkle 2.8s ease-in-out infinite;
+      opacity: .7;
+    }
+
+    .kiss {
+      margin-top: 18px;
+      font-size: clamp(26px, 5vw, 42px);
+      letter-spacing: .08em;
+    }
+
+    @keyframes rise {
+      0% { transform: translateY(0) rotate(45deg) scale(.8); opacity: 0; }
+      10% { opacity: .95; }
+      100% { transform: translateY(-120vh) translateX(40px) rotate(45deg) scale(1.25); opacity: 0; }
+    }
+
+    @keyframes twinkle {
+      0%, 100% { transform: scale(1) rotate(0deg); opacity: .45; }
+      50% { transform: scale(1.25) rotate(8deg); opacity: 1; }
+    }
+
+    @media (max-width: 640px) {
+      .card { padding: 28px 18px; min-height: 420px; }
+      .play-area { height: 300px; }
+      .btn { min-width: 118px; font-size: 18px; padding: 12px 18px; }
+      #yesBtn { left: 11%; top: 58%; }
+      #noBtn { left: 53%; top: 58%; }
+      .hint { font-size: 13px; bottom: 12px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="screen active" id="questionScreen">
+    <div class="heart-layer" id="heartLayer1"></div>
+    <div class="card">
+      <div class="mini-hearts" id="miniHearts1"></div>
+      <p class="eyebrow">Operazione amicizia</p>
+      <h1>Vuoi tornare<br>mio amico?</h1>
+      <p class="subtitle">Attenzione: questa è una pagina dolcissima, piena di amore e di cuoricini 💘</p>
+      <div class="play-area" id="playArea">
+        <button class="btn" id="yesBtn" aria-label="Sì">Sì</button>
+        <button class="btn" id="noBtn" aria-label="No">No</button>
+        <div class="hint">Spoiler: uno dei due pulsanti è molto più collaborativo dell'altro 💗</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="screen" id="resultScreen">
+    <div class="heart-layer" id="heartLayer2"></div>
+    <div class="card">
+      <div class="mini-hearts" id="miniHearts2"></div>
+      <p class="eyebrow">Risultato finale</p>
+      <div class="big-message">Suca Lanza</div>
+      <div class="small-love">Con tantissimo affetto e una pioggia infinita di cuoricini 💞</div>
+      <div class="kiss">💖 💘 💝 💓 💗 💞 💕</div>
+    </div>
+  </div>
+
+  <script>
+    const playArea = document.getElementById('playArea');
+    const yesBtn = document.getElementById('yesBtn');
+    const noBtn = document.getElementById('noBtn');
+    const questionScreen = document.getElementById('questionScreen');
+    const resultScreen = document.getElementById('resultScreen');
+
+    function randomBetween(min, max) {
+      return Math.random() * (max - min) + min;
+    }
+
+    function placeYesRandomly() {
+      const areaRect = playArea.getBoundingClientRect();
+      const btnRect = yesBtn.getBoundingClientRect();
+      const maxX = Math.max(8, areaRect.width - btnRect.width - 8);
+      const maxY = Math.max(8, areaRect.height - btnRect.height - 8);
+      const x = randomBetween(8, maxX);
+      const y = randomBetween(8, maxY);
+      yesBtn.style.left = x + 'px';
+      yesBtn.style.top = y + 'px';
+    }
+
+    function dodgeButton(event) {
+      const areaRect = playArea.getBoundingClientRect();
+      const btnRect = yesBtn.getBoundingClientRect();
+      const pointerX = (event.touches ? event.touches[0].clientX : event.clientX) - areaRect.left;
+      const pointerY = (event.touches ? event.touches[0].clientY : event.clientY) - areaRect.top;
+      const currentX = parseFloat(yesBtn.style.left) || (btnRect.left - areaRect.left);
+      const currentY = parseFloat(yesBtn.style.top) || (btnRect.top - areaRect.top);
+      const dx = currentX + btnRect.width / 2 - pointerX;
+      const dy = currentY + btnRect.height / 2 - pointerY;
+      const distance = Math.hypot(dx, dy);
+
+      if (distance < 120) {
+        const angle = Math.atan2(dy || (Math.random() - 0.5), dx || (Math.random() - 0.5));
+        const jump = randomBetween(110, 170);
+        let nextX = currentX + Math.cos(angle) * jump;
+        let nextY = currentY + Math.sin(angle) * jump;
+
+        const maxX = areaRect.width - btnRect.width - 8;
+        const maxY = areaRect.height - btnRect.height - 8;
+
+        if (nextX < 8 || nextX > maxX || nextY < 8 || nextY > maxY) {
+          nextX = randomBetween(8, Math.max(8, maxX));
+          nextY = randomBetween(8, Math.max(8, maxY));
+        }
+
+        yesBtn.style.left = nextX + 'px';
+        yesBtn.style.top = nextY + 'px';
+      }
+    }
+
+    ['mouseenter', 'pointerenter', 'touchstart', 'click'].forEach(evt => {
+      yesBtn.addEventListener(evt, (e) => {
+        e.preventDefault();
+        placeYesRandomly();
+      }, { passive: false });
+    });
+
+    playArea.addEventListener('mousemove', dodgeButton);
+    playArea.addEventListener('touchmove', dodgeButton, { passive: true });
+
+    noBtn.addEventListener('click', () => {
+      questionScreen.classList.remove('active');
+      resultScreen.classList.add('active');
+    });
+
+    function spawnHearts(layerId, count) {
+      const layer = document.getElementById(layerId);
+      for (let i = 0; i < count; i++) {
+        const heart = document.createElement('span');
+        heart.className = 'floating-heart';
+        const size = randomBetween(14, 34);
+        heart.style.left = randomBetween(0, 100) + '%';
+        heart.style.width = size + 'px';
+        heart.style.height = size + 'px';
+        heart.style.animationDuration = randomBetween(6, 14) + 's';
+        heart.style.animationDelay = randomBetween(-12, 0) + 's';
+        heart.style.opacity = randomBetween(.3, .85);
+        heart.style.background = `rgba(255, ${Math.floor(randomBetween(70, 130))}, ${Math.floor(randomBetween(130, 180))}, ${randomBetween(.14, .35)})`;
+        layer.appendChild(heart);
+      }
+    }
+
+    function sprinkleMiniHearts(layerId, count) {
+      const layer = document.getElementById(layerId);
+      const icons = ['💖','💘','💗','💕','💞'];
+      for (let i = 0; i < count; i++) {
+        const mini = document.createElement('span');
+        mini.className = 'mini';
+        mini.textContent = icons[i % icons.length];
+        mini.style.left = randomBetween(3, 93) + '%';
+        mini.style.top = randomBetween(5, 88) + '%';
+        mini.style.animationDelay = randomBetween(0, 2.8) + 's';
+        mini.style.fontSize = randomBetween(14, 26) + 'px';
+        layer.appendChild(mini);
+      }
+    }
+
+    spawnHearts('heartLayer1', 24);
+    spawnHearts('heartLayer2', 30);
+    sprinkleMiniHearts('miniHearts1', 18);
+    sprinkleMiniHearts('miniHearts2', 22);
+
+    window.addEventListener('resize', () => {
+      const areaRect = playArea.getBoundingClientRect();
+      const btnRect = yesBtn.getBoundingClientRect();
+      const maxX = Math.max(8, areaRect.width - btnRect.width - 8);
+      const maxY = Math.max(8, areaRect.height - btnRect.height - 8);
+      const currentX = Math.min(parseFloat(yesBtn.style.left) || 0, maxX);
+      const currentY = Math.min(parseFloat(yesBtn.style.top) || 0, maxY);
+      yesBtn.style.left = Math.max(8, currentX) + 'px';
+      yesBtn.style.top = Math.max(8, currentY) + 'px';
+    });
+  </script>
+</body>
+</html>
